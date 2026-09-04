@@ -7,7 +7,7 @@ import { ScanSearch, Maximize2, Trash2, Check, X, SunMedium, Moon } from 'lucide
 
 interface FrameCardProps {
   frame: MediaFrame;
-  onMatchShot: (vector: number[]) => void;
+  onMatchShot: (vector: number[], frame: MediaFrame) => void;
   onSelectColor: (hex: string) => void;
   onDelete?: (id: string) => void;
 }
@@ -23,12 +23,13 @@ export const FrameCard: React.FC<FrameCardProps> = ({
   const clusters = frame.dominant_clusters || [];
 
   const handleMatchClick = () => {
+    let vector: number[] = [];
     if (frame.raw_vector) {
-      const vector = typeof frame.raw_vector === 'string' 
+      vector = typeof frame.raw_vector === 'string' 
         ? JSON.parse(frame.raw_vector) 
         : frame.raw_vector;
-      onMatchShot(vector);
     }
+    onMatchShot(vector, frame);
   };
 
   // Close lightbox on Escape key

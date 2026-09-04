@@ -35,10 +35,12 @@ export interface MediaFrame {
   is_sample?: boolean;
   raw_vector?: string;
   aesthetic_distance?: number;
+  delta_e?: number;
 }
 
 export interface SearchFilters {
   targetPalette: number[];
+  accentColors?: string[];
   minShadowCrush: number;
   maxShadowCrush: number;
   minLuminance: number;

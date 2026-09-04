@@ -5,7 +5,7 @@ import { DualColorPicker } from '@/components/DualColorPicker';
 import { MoodSliders } from '@/components/MoodSliders';
 import { InspoDropzone } from '@/components/InspoDropzone';
 import { FrameCard } from '@/components/FrameCard';
-import { buildQueryVector } from '@/lib/colorUtils';
+import { buildQueryVector, extractDualAccents } from '@/lib/colorUtils';
 import { searchFrames, deleteFrame } from '@/lib/api';
 import { MediaFrame } from '@/types';
 import { 
@@ -36,6 +36,7 @@ export default function Home() {
       const targetPalette = customVector || activeVector || buildQueryVector(primaryColor, secondaryColor);
       const results = await searchFrames({
         targetPalette,
+        accentColors: [primaryColor, secondaryColor],
         minShadowCrush,
         maxShadowCrush: 1.0,
         minLuminance: 0.0,
@@ -58,7 +59,12 @@ export default function Home() {
     return () => clearTimeout(timer);
   }, [executeSearch]);
 
-  const handleMatchShot = (vector: number[]) => {
+  const handleMatchShot = (vector: number[], matchedFrame?: MediaFrame) => {
+    if (matchedFrame) {
+      const { accentA, accentB } = extractDualAccents(matchedFrame);
+      setPrimaryColor(accentA);
+      setSecondaryColor(accentB);
+    }
     setActiveVector(vector);
     executeSearch(vector);
   };
@@ -91,12 +97,33 @@ export default function Home() {
 
         <InspoDropzone onIngestSuccess={() => executeSearch()} />
 
-        <DualColorPicker
-          primaryColor={primaryColor}
-          setPrimaryColor={(c) => { setActiveVector(null); setPrimaryColor(c); }}
-          secondaryColor={secondaryColor}
-          setSecondaryColor={(c) => { setActiveVector(null); setSecondaryColor(c); }}
-        />
+        <div className="space-y-2">
+          <DualColorPicker
+            primaryColor={primaryColor}
+            setPrimaryColor={(c) => { setActiveVector(null); setPrimaryColor(c); }}
+            secondaryColor={secondaryColor}
+            setSecondaryColor={(c) => { setActiveVector(null); setSecondaryColor(c); }}
+          />
+
+          {activeVector && (
+            <div className="flex items-center justify-between px-3 py-1.5 rounded-xl bg-cyan-950/40 border border-cyan-500/30 text-xs font-mono text-cyan-300 animate-in fade-in duration-200">
+              <span className="flex items-center gap-1.5 text-[11px]">
+                <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
+                Synced with Shot DNA
+              </span>
+              <button
+                type="button"
+                onClick={() => {
+                  setActiveVector(null);
+                  executeSearch();
+                }}
+                className="text-[10px] text-neutral-400 hover:text-white underline cursor-pointer"
+              >
+                Reset
+              </button>
+            </div>
+          )}
+        </div>
 
         <MoodSliders
           maxLuminance={maxLuminance}
